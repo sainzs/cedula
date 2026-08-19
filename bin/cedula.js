@@ -26,23 +26,30 @@ function getPath(obj, path) {
   return path.split(".").reduce((o, k) => (o == null ? o : o[k]), obj);
 }
 
-/** Classify a leaf value's provenance. Never returns the resolved secret. */
+/**
+ * Classify a leaf value's provenance. Never returns the resolved secret, and
+ * never carries the raw command — only an allowlisted, non-secret identifier
+ * (e.g. a Keychain service name) plus the executable's name.
+ */
 function classify(value) {
   if (typeof value !== "string") return { kind: "literal", detail: typeof value };
   const m = value.match(SHELL_SOURCE_RE);
   if (!m) return { kind: "literal", detail: "inline string (consider externalizing)" };
   const cmd = m[1];
+  // Extract only the leading executable name — never the full command, which
+  // could carry an inline token or sensitive argument.
+  const exe = (cmd.trim().match(/^[^\s]+/) || ["command"])[0].replace(/^.*\//, "");
   if (/\bsecurity\s+find-generic-password\b/.test(cmd)) {
     const svc = cmd.match(/-s\s+'?([^'\s]+)'?/);
-    return { kind: "keychain", detail: `macOS Keychain${svc ? ` (service "${svc[1]}")` : ""}`, command: cmd };
+    return { kind: "keychain", detail: `macOS Keychain${svc ? ` (service "${svc[1]}")` : ""}`, via: exe };
   }
   if (/\bpi\s+auth\s+print-api-key\b/.test(cmd)) {
     const prov = cmd.match(/--provider\s+'?([^'\s]+)'?/);
-    return { kind: "auth-store", detail: `pi auth store${prov ? ` (provider "${prov[1]}")` : ""}`, command: cmd };
+    return { kind: "auth-store", detail: `pi auth store${prov ? ` (provider "${prov[1]}")` : ""}`, via: exe };
   }
-  if (/\bop\s+read\b|\bop\s+item\s+get\b/.test(cmd)) return { kind: "1password", detail: "1Password CLI", command: cmd };
-  if (/\baws\b/.test(cmd)) return { kind: "aws", detail: "AWS CLI / SSO", command: cmd };
-  return { kind: "command", detail: "shell command substitution", command: cmd };
+  if (/\bop\s+read\b|\bop\s+item\s+get\b/.test(cmd)) return { kind: "1password", detail: "1Password CLI", via: exe };
+  if (/\baws\b/.test(cmd)) return { kind: "aws", detail: "AWS CLI / SSO", via: exe };
+  return { kind: "command", detail: "shell command substitution", via: exe };
 }
 
 function trace(file, keypath) {
@@ -57,7 +64,7 @@ function trace(file, keypath) {
   console.log(`${mint()}${keypath}${rst()}`);
   console.log(`  source:   ${c.kind}`);
   console.log(`  ${dim()}${c.detail}${rst()}`);
-  if (c.command) console.log(`  command:  ${dim()}${c.command}${rst()}`);
+  if (c.via) console.log(`  via:      ${dim()}${c.via} (command shape withheld — may carry a secret)${rst()}`);
   console.log(`  resolved: ${dim()}(never printed — secret stays in the store)${rst()}`);
 }
 

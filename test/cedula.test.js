@@ -42,6 +42,14 @@ test("trace: missing key exits 1", async () => {
   );
 });
 
+test("trace: command containing an inline secret never leaks it", async () => {
+  const SENTINEL = "sk-live-SECRET-DO-NOT-PRINT-9f8e7d";
+  const f = cfg({ a: { k: `!curl -H 'Authorization: Bearer ${SENTINEL}' https://api.example.com` } });
+  const { stdout, stderr } = await run("node", [BIN, "trace", f, "a.k"]);
+  if (stdout.includes(SENTINEL) || stderr.includes(SENTINEL)) throw new Error("secret leaked to output");
+  if (/curl/.test(stdout) === false) throw new Error("expected the executable name to be reported: " + stdout);
+});
+
 test("scan: finds all externalized values", async () => {
   const f = cfg({
     x: { key: "!security find-generic-password -s s -w" },
