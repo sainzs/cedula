@@ -1,0 +1,30 @@
+{
+  "name": "@sainzs/cedula",
+  "version": "0.1.0",
+  "description": "Credential & config provenance tracer — where does this value come from? Never prints the secret.",
+  "type": "module",
+  "bin": {
+    "cedula": "bin/cedula.js"
+  },
+  "files": [
+    "bin/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "credentials",
+    "provenance",
+    "secrets",
+    "config",
+    "security",
+    "cli"
+  ],
+  "license": "MIT",
+  "repository": "github:sainzs/cedula"
+}
