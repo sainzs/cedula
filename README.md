@@ -6,8 +6,8 @@ Keychain, 1Password, an auth store, an inline literal) and **never prints the
 resolved secret.**
 
 ```sh
-npx @sainzs/cedula trace config.json providers.azure.apiKey
-npx @sainzs/cedula scan  config.json
+npx @ssainzs/cedula trace config.json providers.azure.apiKey
+npx @ssainzs/cedula scan  config.json
 ```
 
 ![cédula tracing a credential to its Keychain source](assets/hero.gif)

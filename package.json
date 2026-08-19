@@ -1,5 +1,5 @@
 {
-  "name": "@sainzs/cedula",
+  "name": "@ssainzs/cedula",
   "version": "0.1.0",
   "description": "Credential & config provenance tracer — where does this value come from? Never prints the secret.",
   "type": "module",
